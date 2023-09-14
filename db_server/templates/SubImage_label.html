@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #image-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #image-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .marker {
+            position: absolute;
+            background-color: blue;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .dialog-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+        }
+
+        .dialog-container input[type="text"] {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="image-container">
+        <img id="image" src="data:image/jpeg;base64,{{ image_data }}">
+    </div>
+
+    <div class="dialog-container">
+        <h3>保存点信息</h3>
+        <h5>-1:针尖，-2：圆心，-3：针尾，0~1：百分位点</h5>
+        <p id="point-info"></p>
+        <input type="text" id="tag-input" placeholder="输入标签">
+        <button id="btn-save">确定</button>
+        <button id="btn-save-all">保存全部</button>
+        <button id="btn-cancel">取消</button>
+    </div>
+
+    <script>
+        var camid="{{camid}}"
+        $(document).ready(function () {
+            var imageContainer = $('#image-container');
+            var image = $('#image');
+            var dialogContainer = $('.dialog-container');
+            var pointInfo = $('#point-info');
+            var tagInput = $('#tag-input');
+
+            image.on('load', function () {
+                var imageWidth = image.width();
+                var imageHeight = image.height();
+
+                imageContainer.css('width', imageWidth);
+                imageContainer.css('height', imageHeight);
+            });
+
+            imageContainer.on('click', function (event) {
+                var x = event.offsetX;
+                var y = event.offsetY;
+
+//                pointInfo.text('坐标：(' + x + ', ' + y + ')');
+                dialogContainer.fadeIn();
+
+                $('#btn-save').off('click').on('click', function () {
+                    var tag = tagInput.val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/handle_click/'+camid,
+                        contentType: 'application/json',
+                        data: JSON.stringify({ 'x': x, 'y': y }),
+                        success: function () {
+                            dialogContainer.fadeOut();
+                        }
+                    });
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/save_points/'+camid,
+                        contentType: 'application/json',
+                        data: JSON.stringify({ 'tag': tag }),
+                        success: function () {
+                            dialogContainer.fadeOut();
+                            createMarker(x, y);
+                        }
+                    });
+                });
+
+                $('#btn-save-all').off('click').on('click', function () {
+                    var tag = tagInput.val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/handle_click/'+camid,
+                        contentType: 'application/json',
+                        data: JSON.stringify({ 'x': x, 'y': y }),
+                        success: function () {
+                            dialogContainer.fadeOut();
+                        }
+                    });
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/save_points/'+camid,
+                        contentType: 'application/json',
+                        data: JSON.stringify({ 'tag': tag }),
+                        success: function () {
+                            dialogContainer.fadeOut();
+                            createMarker(x, y);
+                        }
+                    });
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/save_all_points/'+camid,
+                        success: function () {
+                            alert('所有点已保存');
+                        }
+                    });
+                });
+
+                $('#btn-cancel').off('click').on('click', function () {
+                    dialogContainer.fadeOut();
+                });
+            });
+
+            function createMarker(x, y) {
+                var marker = $('<div class="marker"></div>');
+                marker.css('left', x);
+                marker.css('top', y);
+                imageContainer.append(marker);
+                console.log("marker",x,y)
+            }
+
+            // 加载已保存的点
+            $.ajax({
+                type: 'GET',
+                url: '/get_points/'+camid,
+                success: function (data) {
+                    var savedPoints = data;
+                    for (var i = 0; i < savedPoints.length; i++) {
+                        var point = savedPoints[i];
+                        createMarker(point.x, point.y);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Layui</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="../../dist/css/layui.css"  media="all">
+  <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+</head>
+<body>
+<div style="margin: 0 auto; max-width: 720px;">
+<div class="layui-col-md7">
+    <div class="grid-demo grid-demo-bg1">
+      <div class="site-demo-flow" id="LAY_demo3">
+        <img src="../image/1.jpg">
+      </div>
+    </div>
+</div>
+<div class="layui-col-md5">
+  <table class="layui-table" lay-skin="line" lay-filter="parse-table-demo">
+    <thead>
+    <tr>
+      <th lay-data="{checkbox:true}"></th>
+      <th lay-data="{field:'username', width:200}">昵称</th>
+      <th lay-data="{field:'joinTime', width:150}">加入时间</th>
+      <td rowspan="3" lay-data="{field:'louceng'}">楼层</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td></td>
+      <td>贤心1</td>
+      <td>2016-11-28</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>贤心2</td>
+      <td>2016-11-29</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>贤心3</td>
+      <td>2016-11-30</td>
+    </tr>
+    </tbody>
+  </table>
+<!--  <div class="layui-row-md4">-->
+<!--    <div class="layui-col-md12">-->
+<!--      <div class="grid-demo grid-demo-bg1">-->
+<!--        <b>Value:  </b>-->
+<!--        0.0-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--  <div class="layui-row-md4">-->
+<!--    <div class="layui-col-md12">-->
+<!--      <div class="grid-demo grid-demo-bg1">-->
+<!--        <b>Update Date: </b>-->
+<!--        2023 年 6 月 28 日</div>-->
+<!--  </div>-->
+<!--  <div class="layui-row-md4">-->
+<!--    <div class="layui-col-md6">-->
+<!--      <div class="grid-demo grid-demo-bg1">-->
+<!--        <b>Early Warning Interval:</b>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <div class="layui-col-md6">(30 , 60)</div>-->
+  </div>
+</div>
+</div>
+
+<script src="../../dist/layui.js" charset="utf-8"></script>
+<script>
+  layui.use('flow', function(){
+    var flow = layui.flow;
+
+    flow.load({
+      elem: '#LAY_demo1' //流加载容器
+      ,scrollElem: '#LAY_demo1' //滚动条所在元素，一般不用填，此处只是演示需要。
+      ,done: function(page, next){ //执行下一页的回调
+
+        //模拟数据插入
+        setTimeout(function(){
+          var lis = [];
+          for(var i = 0; i < 8; i++){
+            lis.push('<li>'+ ( (page-1)*8 + i + 1 ) +'</li>')
+          }
+
+          //执行下一页渲染，第二参数为：满足“加载更多”的条件，即后面仍有分页
+          //pages为Ajax返回的总页数，只有当前页小于总页数的情况下，才会继续出现加载更多
+          next(lis.join(''), page < 10); //假设总页数为 10
+        }, 500);
+      }
+    });
+
+    flow.load({
+      elem: '#LAY_demo2' //流加载容器
+      ,scrollElem: '#LAY_demo2' //滚动条所在元素，一般不用填，此处只是演示需要。
+      ,isAuto: false
+      ,isLazyimg: true
+      ,done: function(page, next){ //加载下一页
+        //模拟插入
+        setTimeout(function(){
+          var lis = [];
+          for(var i = 0; i < 6; i++){
+            //   lis.push('<li><img lay-src="https://itze.cn/uploads/layui.png?v='+ ( (page-1)*6 + i + 1 ) +'"></li>')
+            lis.push('<li><img lay-src="../image/1.jpg"></li>')
+          }
+          next(lis.join(''), page < 6); //假设总页数为 6
+        }, 500);
+      }
+    });
+
+    //按屏加载图片
+    flow.lazyimg({
+      elem: '#LAY_demo3 img'
+      ,scrollElem: '#LAY_demo3' //一般不用设置，此处只是演示需要。
+    });
+
+  });
+</script>
+
+</body>
+</html>

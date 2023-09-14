@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>表格操作 - layui</title>
+  <link rel="stylesheet" href="../../src/css/layui.css">
+  <style>
+    body{padding: 32px; /*overflow-y: scroll;*/}
+    .layui-table-view{margin: 8px 0;}
+    .red-text {
+      color: red;
+      background-color: #f5c7bf;
+    }
+    .green-text {
+      color: green;
+    }
+
+
+  </style>
+</head>
+<body>
+<table class="layui-table" lay-filter="parse-table-demo">
+  <thead>
+  <tr>
+    <td rowspan="3" lay-data="{field:'louceng'}"><img src="../image/1.jpg"></td>
+    <td lay-data="{field:'men1', width:40}"><b>Value</b></td>
+    <td lay-data="{field:'men2', width:40}"><p class="red-text">0.0</p></td>
+  </tr>
+  <tr>
+    <td lay-data="{field:'men1', width:40}"><b>Update Date</b></td>
+    <td lay-data="{field:'men2', width:40}">2023年6月28日</td>
+  </tr>
+  <tr>
+    <td lay-data="{field:'men1', width:40}"><b>Monitor Interval</b></td>
+    <td lay-data="{field:'men2', width:40}">(0,1)</td>
+  </tr>
+  </thead>
+</table>
+</div>
+
+
+
+</body>
+</html>

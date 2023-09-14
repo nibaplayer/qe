@@ -1,0 +1,188 @@
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--  <meta charset="utf-8">-->
+<!--        <title>Camera</title>-->
+<!--        <meta name="renderer" content="webkit">-->
+<!--        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">-->
+<!--        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">-->
+<!--&lt;!&ndash;        <link rel="stylesheet" href="layui/dist/css/layui.css"  media="all">&ndash;&gt;-->
+<!--        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='layui/dist/css/layui.css') }}">-->
+<!--  <style>-->
+<!--    html, body {-->
+<!--      height: 100%;-->
+<!--      margin: 0;-->
+<!--      padding: 0;-->
+<!--    }-->
+
+<!--    .container_camera {-->
+<!--      width: 100vw;-->
+<!--      height: 100%;-->
+<!--      display: flex;-->
+<!--      justify-content: center;-->
+<!--      align-items: center;-->
+<!--    }-->
+
+<!--    .container_camera img {-->
+<!--      max-width: 100%;-->
+<!--      max-height: 100%;-->
+<!--      object-fit: cover;-->
+<!--    }-->
+<!--  </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<ul class="layui-nav">-->
+<!--  <li class="layui-nav-item"><a href="/">监控面板</a></li>-->
+<!--  <li class="layui-nav-item"><a href="/setting">配置</a></li>-->
+<!--  <li class="layui-nav-item  layui-this">-->
+<!--    <a href="javascript:;">摄像头</a>-->
+<!--    <dl class="layui-nav-child">-->
+<!--      <dd><a href="">cam1</a></dd>-->
+<!--      <dd><a href="">cam2</a></dd>-->
+<!--      <dd><a href="">cam3</a></dd>-->
+<!--    </dl>-->
+<!--  </li>-->
+<!--</ul>-->
+
+<!--<div class="container_camera">-->
+<!--  <img src="data:image/jpeg;base64,{{ image_data }}">-->
+<!--</div>-->
+
+<!--<script src="{{ url_for('static', filename='layui/dist/layui.js') }}" charset="utf-8"></script>-->
+
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Camera</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='layui/dist/css/layui.css') }}">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container_camera {
+      width: 100vw;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .container_camera img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .container_camera .rectangle {
+      position: absolute;
+      border: 2px solid red;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .container_camera .tag {
+      position: absolute;
+      color: #faec00;
+      background: red;
+      padding: 0px 0px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+  <legend>仪表监控系统</legend>
+</fieldset>
+
+<ul class="layui-nav">
+  <li class="layui-nav-item"><a href="/">监控面板</a></li>
+  <li class="layui-nav-item"><a href="/setting">配置</a></li>
+  <li class="layui-nav-item  layui-this">
+    <a href="javascript:;">cam{{camid}}</a>
+    <dl class="layui-nav-child">
+      <dd><a href="/camera/1">cam1</a></dd>
+      <dd><a href="/camera/2">cam2</a></dd>
+      <dd><a href="/camera/4">cam4</a></dd>
+      <dd><a href="/camera/5">cam5</a></dd>
+    </dl>
+  </li>
+</ul>
+
+<div class="container_camera">
+  <img id="image" src="data:image/jpeg;base64,{{ image_data }}">
+</div>
+
+<script src="{{ url_for('static', filename='layui/dist/layui.js') }}" charset="utf-8"></script>
+<script>
+
+  // 获取图像元素和矩形框数据
+function update(){
+  var camid="{{camid}}";
+  fetch("/getBoxes/"+camid)
+    .then(response => response.json())
+    .then(data => {
+      var rectangles = Array.from(data);
+      drawRectangles(rectangles);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  function drawRectangles(rectangles){
+    var image = document.getElementById('image');
+    rectangles.forEach(function(rectangle) {
+    var xmin = rectangle[0] * image.width;
+    var ymin = rectangle[1] * image.height;
+    var xmax = rectangle[2] * image.width;
+    var ymax = rectangle[3] * image.height;
+    var tag = rectangle[4];
+
+    // 创建矩形框元素
+    var rectElement = document.createElement('div');
+    rectElement.className = 'rectangle';
+    rectElement.style.left = xmin + 'px';
+    rectElement.style.top = ymin + 'px';
+    rectElement.style.width = (xmax - xmin) + 'px';
+    rectElement.style.height = (ymax - ymin) + 'px';
+
+    // 创建标记元素
+    var tagElement = document.createElement('div');
+    tagElement.className = 'tag';
+    // tagElement.style.left = (xmin - 0.3*(xmax - xmin)) + 'px';
+    tagElement.style.left = xmax + 'px';
+    tagElement.style.top = ymin  + 'px';
+    tagElement.innerText = tag;
+    var fontSize = Math.max(1,Math.floor(0.1 * (ymax - ymin)));
+    console.log(fontSize,(ymax - ymin))
+    tagElement.style.fontSize = fontSize + 'px';
+
+    // 将矩形框和标记添加到图像容器中
+    var container = document.querySelector('.container_camera');
+    container.appendChild(rectElement);
+    container.appendChild(tagElement);
+  });
+  }
+}
+update();
+
+setInterval(update,5000);
+
+</script>
+
+</body>
+</html>
+
+

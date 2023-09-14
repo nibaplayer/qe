@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>表格操作 - layui</title>
+  <link rel="stylesheet" href="../../src/css/layui.css">
+  <link rel="stylesheet" href="../../dist/css/layui.css"  media="all">
+  <style>
+    body{padding: 32px; /*overflow-y: scroll;*/}
+    .layui-table-view{margin: 8px 0;}
+    .red-text {
+      color: red;
+      background-color: #f5c7bf;
+    }
+    .green-text {
+      color: #87ec77;
+    }
+    input[type="setting-text"] {
+      width: 80px; /* 设置宽度为200像素 */
+    }
+    table {
+      width: 100%;
+    }
+
+  </style>
+</head>
+<body>
+<table class="layui-table" lay-filter="parse-table-demo">
+  <thead>
+  <tr>
+    <td rowspan="5" lay-data="{field:'louceng'}"><img src="../image/1.jpg"></td>
+    <td lay-data="{field:'men1', width:40}"><b>ID</b></td>
+    <td lay-data="{field:'men2', width:40}">cam0.db0.p1</td>
+    <td colspan="2" lay-data="{field:'louceng'}"><b>锚框</b></td>
+  </tr>
+  <tr>
+    <td lay-data="{field:'men1', width:40}"><b>采样频率</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.ratio" value=1></td>
+    <td lay-data="{field:'men1', width:40}"><b>XMin</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.xmin" value=0></td>
+  </tr>
+  <tr>
+    <td lay-data="{field:'men1', width:40}"><b>量程</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.scale" value=100></td>
+    <td lay-data="{field:'men1', width:40}"><b>YMin</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.ymin" value=0></td>
+  </tr>
+  <tr>
+    <td lay-data="{field:'men1', width:40}"><b>预警区间</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.rule" value="(-inf,inf)"></td>
+    <td lay-data="{field:'men1', width:40}"><b>XMax</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.xmax" value=100></td>
+  </tr>
+  <tr>
+    <td lay-data="{field:'men1', width:40}">
+      <button type="button" id="monitor-button" onclick="toggleMonitorButton()" class="layui-btn layui-btn-primary layui-btn-radius">监控停止</button>
+    </td>
+    <td lay-data="{field:'men2', width:40}">
+      <button type="button" id="warning-button" onclick="toggleWarnButton()" class="layui-btn layui-btn-primary layui-btn-radius">预警停止</button>
+    </td>
+    <td lay-data="{field:'men1', width:40}"><b>YMax</b></td>
+    <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="cam0.db0.p1.ymax" value=100></td>
+  </tr>
+  </thead>
+</table>
+</div>
+
+<script src="../../dist/layui.js" charset="utf-8"></script>
+<script>
+  function toggleMonitorButton() {
+    var button = document.getElementById("monitor-button");
+
+    if (button.innerHTML === "监控停止") {
+      button.innerHTML = "监控开启";
+
+      button.className = "layui-btn layui-btn-normal layui-btn-radius"
+
+    } else {
+      button.innerHTML = "监控停止";
+      button.className = "layui-btn layui-btn-primary layui-btn-radius";
+      var wbt= document.getElementById("warning-button");
+      wbt.innerHTML = "预警停止";
+      wbt.className = "layui-btn layui-btn-primary layui-btn-radius";
+    }
+  }
+</script>
+<script>
+  function toggleWarnButton() {
+    var button = document.getElementById("warning-button");
+
+    if (button.innerHTML === "预警停止") {
+      button.innerHTML = "预警开启";
+
+      button.className = "layui-btn layui-btn-normal layui-btn-radius"
+    } else {
+      button.innerHTML = "预警停止";
+      button.className = "layui-btn layui-btn-primary layui-btn-radius";
+    }
+  }
+</script>
+</body>
+</html>
