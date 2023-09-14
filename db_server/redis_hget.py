@@ -13,3 +13,6 @@ for field in fields:
         r.hset(hash_name,temp,pack("(10,20)"))
 
 #value = unpack(r.hget(,"container-value-cam1-mechanical-2-interval"))
+temp = unpack(r.hget(hash_name,"container-value-cam1-mechanical-1-interval"))
+temp = temp.strip("()")
+print(temp)

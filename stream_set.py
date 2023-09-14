@@ -1,5 +1,7 @@
+
 import requests
 import redis
+from db_server import util
 
 
 url="http://10.214.131.229:9081/streams"
@@ -22,18 +24,23 @@ print(resp.content)
 resp=requests.get(url)
 print(resp.content)
 id="rule1"
-#从redis读取阈值
 
+
+#从redis读取阈值
 r = redis.Redis(host='10.214.131.229', port=6379)
 hash_name = "monitor_profile"
 fields = r.hkeys(hash_name) #读取所有fields
 for field in fields:
     print(field.decode())
+#测试下rules_profile中对于变量的引用
+# temp = util.unpack(r.hget(hash_name,"container-value-cam1-mechanical-1-interval"))
+# temp = temp.strip("()")
+# res = temp.split(",")
 
 
 rules_profile={
    "id": id,
-   "sql":f"SELECT id ,avg(score) as avg_score from mts_stream group by TUMBLINGWINDOW(ss, 1) having avg_score BETWEEN 10 AND 20;",
+   "sql":f"SELECT id ,avg(score) as avg_score from mts_stream group by TUMBLINGWINDOW(ss, 1) having avg_score BETWEEN {10} AND {20};",#这里参数需要改
    "actions":[
       {
          "mqtt":{

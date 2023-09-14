@@ -18,7 +18,7 @@ client.connect(broker_address, port)
 # 设置消息接收回调函数
 
 data={
-    "id": 123,
+    "id": "container-value-cam1-mechanical-1-interval",
     "name": "mts",
     "score": 16.0,
     "status": True
