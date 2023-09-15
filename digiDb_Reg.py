@@ -63,9 +63,9 @@ class Redis:
             pass
 
 def getMaxBoxValue(resultEn,resultCn):
-    filtered_data = [item for item in resultEn if isinstance(item[1], (int, float)) or (isinstance(item[1][0], str) and item[1][0].replace('.', '', 1).isdigit())]
+    filtered_data = [item for item in resultEn[0] if isinstance(item[1], (int, float)) or (isinstance(item[1][0], str) and item[1][0].replace('.', '', 1).isdigit())]
     if filtered_data==[]:
-        filtered_data = [item for item in resultCn if isinstance(item[1], (int, float)) or (isinstance(item[1][0], str) and item[1][0].replace('.', '', 1).isdigit())]
+        filtered_data = [item for item in resultCn[0] if isinstance(item[1], (int, float)) or (isinstance(item[1][0], str) and item[1][0].replace('.', '', 1).isdigit())]
         if filtered_data==[]:
             return -1.0
     areas = []
@@ -100,12 +100,13 @@ while(True):
                     image_array = np.array(image)
                     resultEn = ocrEn.ocr(image_array,cls=True)
                     resultCn = ocrCn.ocr(image_array,cls=True)
+#                    print("resultEn -- resultCn",resultCn,resultEn)
                     value=getMaxBoxValue(resultEn,resultCn)
                     if value==-1:
                         continue
                     Rpipe.hset(f"Monitor_{id}", "value",value)
                     Rpipe.hset(f"Monitor_{id}", "timestamp", getTimeStampStr())
-                    print(f"Monitor_{id}", "value")
+                    print(f"Monitor_{id}", value)
             Rpipe.execute()
     except:
         pass

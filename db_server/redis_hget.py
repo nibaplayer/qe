@@ -16,6 +16,7 @@ for field in fields:
         intervals[temp] = temp_intervals.split(",")
         # print(temp)
         #r.hset(hash_name,temp,pack("(10,20)"))
+        print(unpack(r.hget(hash_name,temp)))
 print(intervals)
 #value = unpack(r.hget(,"container-value-cam1-mechanical-2-interval"))
 temp = unpack(r.hget(hash_name,"container-value-cam1-mechanical-1-interval"))
