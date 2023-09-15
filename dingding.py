@@ -26,7 +26,7 @@ def on_message(client, userdata, msg):
     #添加判断 
     #阈值需要每次去读 <<<<-----------
     print("Received message: "+msg.payload.decode())
-    # xiaoding.send_text(msg.payload.decode(), is_at_all=False)  #当前读数超过阈值后会一直报警
+    xiaoding.send_text(msg.payload.decode(), is_at_all=False)  #当前读数超过阈值后会一直报警
 
 
 # 创建MQTT客户端

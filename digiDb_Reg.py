@@ -6,7 +6,9 @@ import base64
 import zlib
 import redis
 import io
+import json
 import numpy as np
+import paho.mqtt.client as mqtt
 from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
 def pack(v):
@@ -25,7 +27,7 @@ class Redis:
         r = redis.Redis(connection_pool=self.pool)
         return r.pipeline()
 
-    def getR(self):
+    def  getR(self):
         return redis.Redis(connection_pool=self.pool)
 
     def save_a_dict(self, dd):
@@ -82,6 +84,16 @@ def getMaxBoxValue(resultEn,resultCn):
 def getTimeStampStr():
     timestamp = int(time.time())
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))        
+
+def send2mqtt(topic, data,add ,port):
+    client = mqtt.Client("Publish")
+    client.connect(add, port)
+    client.publish(topic, payload=json.dumps(data))
+    time.sleep(1)
+    client.disconnect()
+broker_address = "10.214.131.229"
+port = 1883
+
 client=Redis(IP="10.214.131.229",port=6379)
 ocrEn = PaddleOCR(use_angle_cls=True, lang="en")  
 ocrCn = PaddleOCR(use_angle_cls=True, lang="ch") 
@@ -107,6 +119,15 @@ while(True):
                     Rpipe.hset(f"Monitor_{id}", "value",value)
                     Rpipe.hset(f"Monitor_{id}", "timestamp", getTimeStampStr())
                     print(f"Monitor_{id}", value)
+                    #这里的读数要发给规则引擎
+                    id = id.replace("-","_") #更改下划线
+                    data={
+                        "id": id,
+                        "name": "mts",
+                        "score": value,
+                        "status": True
+                    }
+                    send2mqtt(id, data, broker_address, port)
             Rpipe.execute()
     except:
         pass

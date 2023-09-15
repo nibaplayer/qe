@@ -18,10 +18,10 @@ client.connect(broker_address, port)
 # 设置消息接收回调函数
 
 data={
-    "id": "container-value-cam1-mechanical-1-interval",
+    "id": "container_value_cam1_mechanical_1",
     "name": "mts",
     "score": 16.0,
-    "status": True
+    "status": True 
 }
 def sub():
     client.subscribe("m")
@@ -31,7 +31,7 @@ th=Thread(target=sub)
 th.start()
 client_pub = mqtt.Client("Publisher")
 client_pub.connect(broker_address, port)
-client_pub.publish("topic/mts",payload=json.dumps(data))
+client_pub.publish("container_value_cam1_mechanical_1",payload=json.dumps(data))
 time.sleep(3)
 client_pub.disconnect()
 client.disconnect()

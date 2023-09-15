@@ -5,7 +5,6 @@ import time
 from db_server import util
 
 
-url="http://10.214.131.229:9081/streams"
 
 dataType={
     "int": "bigint",
@@ -15,12 +14,13 @@ dataType={
 }
 #这里给每个表注册一个流
 def Reg_stream(name):
+   url="http://10.214.131.229:9081/streams"
    id = name
    resp=requests.delete(url+"/"+id)
    print(resp.content)
    profile={"sql":f"create stream {id} \
             (id {dataType['int']}, name {dataType['string']}, score {dataType['float']},status {dataType['bool']}) \
-            WITH ( datasource = \"topic/{id}\", FORMAT = \"json\", KEY = \"id\")"}
+            WITH ( datasource = \"{id}\", FORMAT = \"json\", KEY = \"id\")"}
    resp=requests.post(url,json=profile)
    print(resp.content)
    resp=requests.get(url)
@@ -30,12 +30,12 @@ def Reg_rule(name):
    id = name 
    rules_profile={
       "id": id,
-      "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
+      "sql":f"SELECT id ,avg(score) from {name} group by TUMBLINGWINDOW(ss, 1) \
          having avg_score BETWEEN {intervals[name][0]} AND {intervals[name][1]};",#这里参数需要改
       "actions":[
          {
             "mqtt":{
-               "server":"tcp://10.214.131.229:1883",
+               "server":"tcp://10.214.131.229:1883",#这里可以换成变量
                "topic":"m",#这个“m”用于报警
             }
          }
@@ -72,6 +72,7 @@ for field in fields:
       
       intervals[temp] = temp_intervals.split(",") #字典中的temp为修改后的   -全部替换为_
       #每张表要创建一条流
+      
       Reg_stream(temp)
       
       Reg_rule(temp)#创建初始的规则  之后要定期查询更新
