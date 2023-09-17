@@ -85,12 +85,23 @@ def getTimeStampStr():
     timestamp = int(time.time())
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))        
 
-def send2mqtt(topic, data,add ,port):
-    client = mqtt.Client("Publish")
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+
+def send2mqtt(topic, data, add, port):
+#     print("sended")
+    client = mqtt.Client()
+    client.on_connect = on_connect
     client.connect(add, port)
+    print(topic,add,port)
+
     client.publish(topic, payload=json.dumps(data))
-    time.sleep(1)
-    client.disconnect()
+#     client.publish(topic, "1")
+    
+    client.loop_start()  # 开始循环，确保消息发送成功
+    client.loop_stop()  # 停止循环后断开连接
+    
+
 broker_address = "10.214.131.229"
 port = 1883
 
@@ -121,13 +132,15 @@ while(True):
                     print(f"Monitor_{id}", value)
                     #这里的读数要发给规则引擎
                     id = id.replace("-","_") #更改下划线
-                    data={
+                    
+                    data = {
                         "id": id,
                         "name": "mts",
-                        "score": value,
+                        "score": float(value),
                         "status": True
                     }
                     send2mqtt(id, data, broker_address, port)
+                    #print(id, data, broker_address, port)
             Rpipe.execute()
     except:
         pass

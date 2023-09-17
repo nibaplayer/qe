@@ -30,8 +30,8 @@ def Reg_rule(name):
    id = name 
    rules_profile={
       "id": id,
-      "sql":f"SELECT id ,avg(score) from {name} group by TUMBLINGWINDOW(ss, 1) \
-         having avg_score BETWEEN {intervals[name][0]} AND {intervals[name][1]};",#这里参数需要改
+      "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
+         having avg_score >= {intervals[name][0]} AND avg_score <= {intervals[name][1]};",#这里参数需要改
       "actions":[
          {
             "mqtt":{
@@ -62,6 +62,8 @@ fields = r.hkeys(hash_name) #读取所有fields 提取阈值
 intervals = {}
 for field in fields:
    temp = field.decode()
+   #TODO
+   #这里有些有value项  但没有interval项 需要处理一下
    if "interval" in temp:
       temp_intervals = util.unpack(r.hget(hash_name,temp))
       temp_intervals = temp_intervals.strip("()")
