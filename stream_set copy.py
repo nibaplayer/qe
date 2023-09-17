@@ -26,60 +26,33 @@ def Reg_stream(name):
    resp=requests.get(url)
    print(resp.content)
 
-
-
-# 调用函数删除具有前缀为 "prefix_" 的所有规则
-def delete_rules_with_prefix(prefix):
-    url = "http://10.214.131.229:9081/rules"
-    response = requests.get(url)
-    if response.status_code == 200:
-        rules = response.json()
-        for rule in rules:
-            if rule["id"].startswith(prefix):
-                delete_url = url + "/" + rule["id"]
-                delete_response = requests.delete(delete_url)
-                if delete_response.status_code == 200:
-                    print(f"规则 {rule['id']} 删除成功")
-                else:
-                    print(f"规则 {rule['id']} 删除失败")
-    else:
-        print("获取规则列表失败")
-
-
 def Reg_rule(name):
    id = name 
+   rules_profile={
+      "id": id,
+      "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
+         having avg_score >= {intervals[name][0]} AND avg_score <= {intervals[name][1]};",#这里参数需要改
+      "actions":[
+         {
+            "mqtt":{
+               "server":"tcp://10.214.131.229:1883",#这里可以换成变量
+               "topic":"m",#这个“m”用于报警
+            }
+         }
+      ]
+   }
 
    url="http://10.214.131.229:9081/rules"
 
-   delete_rules_with_prefix(id)
+   resp=requests.delete(url+"/"+id)
+   print(resp.content)
 
-   i = 1
-   for interval in intervals[id]:
-      interval_splited =  interval.split(",")
-      temp_id = f"{id}_{i}"
-      i += 1
-      rules_profile={
-         "id": temp_id,
-         "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
-            having avg_score >= {interval_splited[0]} AND avg_score <= {interval_splited[1]};",#这里参数需要改
-         "actions":[
-            {
-               "mqtt":{
-                  "server":"tcp://10.214.131.229:1883",#这里可以换成变量
-                  "topic":"m",#这个“m”用于报警
-               }
-            }
-         ]
-      }
-      resp=requests.post(url,json=rules_profile)
-      print(resp.content)
+   resp=requests.post(url,json=rules_profile)
+   print(resp.content)
 
-      resp=requests.get(url)
-      print(resp.content)
+   resp=requests.get(url)
+   print(resp.content)
 
-
-
-delete_rules_with_prefix("")#把所有规则清空一遍
 
 #从redis读取阈值
 r = redis.Redis(host='10.214.131.229', port=6379)
@@ -94,12 +67,11 @@ for field in fields:
       temp_intervals = util.unpack(r.hget(hash_name,temp))
       temp_intervals = temp_intervals.strip("()")
       temp_intervals = temp_intervals.replace("inf","100000000") #把默认的inf替换掉
-      #拆分放到创建rule中处理
       
       temp = temp.replace("-interval","")
       temp = temp.replace("-","_")
       
-      intervals[temp] = temp_intervals.split("&") #字典中的temp为修改后的   -全部替换为_
+      intervals[temp] = temp_intervals.split(",") #字典中的temp为修改后的   -全部替换为_
       #每张表要创建一条流
       
       Reg_stream(temp)
@@ -127,9 +99,9 @@ while True:
          temp_intervals = temp_intervals.replace("inf","100000000") #把默认的inf替换掉
          temp = temp.replace("-interval","")
          temp = temp.replace("-","_")
-         new_interval = temp_intervals.split("&")
+         new_interval = temp_intervals.split(",")
          if new_interval != intervals[temp]:  #当数值更新时
             intervals[temp] = new_interval
             Reg_rule(temp)#更新规则
    print("update checked")
-   time.sleep(1) # 每操作一轮休息3秒
+   time.sleep(3) # 每操作一轮休息3秒

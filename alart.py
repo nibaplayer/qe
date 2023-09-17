@@ -18,7 +18,6 @@ def on_message_op(client, userdata, message):
     print(f"Received message '{message.payload.decode()}' on topic '{message.topic}'")
     xiaoding.send_text(message.payload.decode(), is_at_all=False)  #当前读数超过阈值后会一直报警
     
-    
 
 
 broker_address = "10.214.131.229"

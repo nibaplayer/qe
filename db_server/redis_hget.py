@@ -16,7 +16,7 @@ for field in fields:
         intervals[temp] = temp_intervals.split(",")
         # print(temp)
         # r.hset(hash_name,"container-value-cam1-digital-5",pack("(10,30)"))
-        print(unpack(r.hget(hash_name,temp)))
+        print(temp,unpack(r.hget(hash_name,temp)))
 # r.hset(hash_name,"container-value-cam1-digital-5-interval",pack("(10,30)"))
 
 print(intervals)
@@ -26,6 +26,6 @@ temp = temp.strip("()")
 print(temp)
 
 # print(intervals["container-value-cam1-mechanical-1-interval"][0],intervals["container-value-cam1-mechanical-1-interval"][1])
-ids = unpack(r.get("Monitor_Containers_Id"))
-for id in ids:
-    print(id)
+# ids = unpack(r.get("Monitor_Containers_Id"))
+# for id in ids:
+#     print(id)

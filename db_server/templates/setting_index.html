@@ -74,7 +74,7 @@
                                     <table class="layui-table" lay-filter="parse-table-demo">
                                       <thead>
                                       <tr>
-                                        <td class="setting_image" rowspan="5" lay-data="{field:'louceng'}" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-image"><img src="/templates/image/none_image.jpg"></td>
+                                        <td class="setting_image" rowspan="6" lay-data="{field:'louceng'}" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-image"><img src="/templates/image/none_image.jpg"></td>
                                         <td lay-data="{field:'men1', width:40}"><b>ID</b></td>
                                         <td lay-data="{field:'men2', width:40}" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-id">{{camera.name}}-{{cls.id}}-{{dashboard.id}}</td>
                                         <td colspan="2" lay-data="{field:'louceng'}"><b>锚框偏移</b></td>
@@ -98,14 +98,18 @@
                                         <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-xmax" value=0></td>
                                       </tr>
                                       <tr>
-                                        <td lay-data="{field:'men1', width:40}">
-                                          <button type="button" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-monitor-button" onclick="toggleMonitorButton('container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}')" class="layui-btn layui-btn-primary layui-btn-radius">监控停止</button>
-                                        </td>
-                                        <td lay-data="{field:'men2', width:40}">
-                                          <button type="button" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-warning-button" onclick="toggleWarnButton('container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}')" class="layui-btn layui-btn-primary layui-btn-radius">预警停止</button>
-                                        </td>
+                                        <td lay-data="{field:'men1', width:40}"><b>自定义表名</b></td>
+                                        <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-username" value="None"></td>
                                         <td lay-data="{field:'men1', width:40}"><b>YMax</b></td>
                                         <td lay-data="{field:'men2', width:40}"><input type="setting-text" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-ymax" value=0></td>
+                                      </tr>
+                                      <tr>
+                                        <td colspan="2" lay-data="{field:'men1', width:40}">
+                                          <button type="button" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-monitor-button" onclick="toggleMonitorButton('container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}')" class="layui-btn layui-btn-primary layui-btn-radius">监控停止</button>
+                                        </td>
+                                        <td colspan="2" lay-data="{field:'men2', width:40}">
+                                          <button type="button" id="container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}-warning-button" onclick="toggleWarnButton('container-value-{{camera.name}}-{{cls.id}}-{{dashboard.id}}')" class="layui-btn layui-btn-primary layui-btn-radius">预警停止</button>
+                                        </td>
                                       </tr>
                                       </thead>
                                     </table>
@@ -135,7 +139,7 @@
   var treeEdge = {};  // 定义全局变量
   var nodeValue = {};
   var updateNode = [];
-  var settingKey = ["interval","frequency","xmin","xmax","ymin","ymax","scale"];
+  var settingKey = ["interval","frequency","xmin","xmax","ymin","ymax","scale","username"];
   window.addEventListener('DOMContentLoaded', function() {
     treeEdge = {};  // 初始化全局变量
     nodeValue = {};
@@ -423,28 +427,31 @@
                             }
                         })
                     var wbt=document.getElementById(item+"-warning-button");
-                    if (wbt.innerHTML === "预警停止") {
-                        CurrentSetting[item + "-warning-button"]=false;
-                    }else {
-                        CurrentSetting[item + "-warning-button"]=true;
-                    };
-                    var wbt=document.getElementById(item+"-monitor-button");
-                    if (wbt.innerHTML === "监控停止") {
-                        CurrentSetting[item + "-monitor-button"]=false;
-                    }else {
-                        CurrentSetting[item + "-monitor-button"]=true;
-                    };
-                    if(CurrentSetting[item + "-monitor-button"]===false){
-                        CurrentSetting[item + "-warning-button"]=false;
+                    if(wbt){
+                        if (wbt.innerHTML === "预警停止") {
+                            CurrentSetting[item + "-warning-button"]=false;
+                        }else {
+                            CurrentSetting[item + "-warning-button"]=true;
+                        };
+                        var wbt=document.getElementById(item+"-monitor-button");
+                        if (wbt.innerHTML === "监控停止") {
+                            CurrentSetting[item + "-monitor-button"]=false;
+                        }else {
+                            CurrentSetting[item + "-monitor-button"]=true;
+                        };
+                        if(CurrentSetting[item + "-monitor-button"]===false){
+                            CurrentSetting[item + "-warning-button"]=false;
+                        }
                     }
                     console.log("getinput", CurrentSetting);
                     resolve(CurrentSetting);
-                })
-                .catch(error => {
+                });
+                
+        })
+        .catch(error => {
                     console.error('Error:', error);
                     reject(error);
                 });
-        });
     });
     }
 
@@ -469,6 +476,23 @@
                 console.error('Error:', error);
             });
     }
+    function first_updateSettingProfile() {
+        getInputData()
+            .then(SettingData => {
+                console.log(SettingData);
+                return fetch('/updateSettingProfile', {
+                    method: 'POST',
+                    body: JSON.stringify(SettingData),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            })
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
 
     function setInputData() {
         fetch('/getSettingProfile')
@@ -477,7 +501,9 @@
             for (let key in data) {
               if (data.hasOwnProperty(key)) {
                 var ie = document.getElementById(key);
-                ie.value=data[key];
+                if (ie){
+                  ie.value=data[key]; 
+                }
               }
             }
           })
@@ -490,21 +516,23 @@
             for (let key in data) {
               if (data.hasOwnProperty(key)) {
                 var ie = document.getElementById(key);
-                if(data[key]){
-                    if(key.endsWith("-warning-button")){
-                        ie.innerHTML="预警开启"
-                        ie.className = "layui-btn layui-btn-normal layui-btn-radius"
+                if(ie){
+                    if(data[key]){
+                        if(key.endsWith("-warning-button")){
+                            ie.innerHTML="预警开启"
+                            ie.className = "layui-btn layui-btn-normal layui-btn-radius"
+                        }else{
+                            ie.innerHTML = "监控开启";
+                            ie.className = "layui-btn layui-btn-normal layui-btn-radius"
+                        }
                     }else{
-                        ie.innerHTML = "监控开启";
-                        ie.className = "layui-btn layui-btn-normal layui-btn-radius"
-                    }
-                }else{
-                    if(key.endsWith("-warning-button")){
-                        ie.innerHTML = "预警停止";
-                        ie.className = "layui-btn layui-btn-primary layui-btn-radius";
-                    }else{
-                        ie.innerHTML = "监控停止";
-                        ie.className = "layui-btn layui-btn-primary layui-btn-radius";
+                        if(key.endsWith("-warning-button")){
+                            ie.innerHTML = "预警停止";
+                            ie.className = "layui-btn layui-btn-primary layui-btn-radius";
+                        }else{
+                            ie.innerHTML = "监控停止";
+                            ie.className = "layui-btn layui-btn-primary layui-btn-radius";
+                        }
                     }
                 }
               }
@@ -520,12 +548,13 @@
 <script>
     var setting_save_button=document.getElementById("setting_save_button");
     setting_save_button.addEventListener('click', updateSettingProfile);
+    first_updateSettingProfile();
+    setInputData();
     function LoopMain(){
         updateNodeList();
         updateDbMonitors();
 
     }
-    setInputData()
     setInterval(LoopMain,1000);
 </script>
 
