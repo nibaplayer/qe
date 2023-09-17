@@ -26,7 +26,22 @@ def Reg_stream(name):
    resp=requests.get(url)
    print(resp.content)
 
-
+# 调用函数删除所有流
+def delete_all_streams():
+    url = "http://10.214.131.229:9081/streams"
+    response = requests.get(url)
+    if response.status_code == 200:
+        streams = response.json()
+        for stream in streams:
+            delete_url = url + "/" + stream
+            # print(delete_url)
+            delete_response = requests.delete(delete_url)
+            if delete_response.status_code == 200:
+                print(f"stream {stream} 删除成功")
+            else:
+                print(f"stream {stream} 删除失败")
+    else:
+        print("获取流列表失败")
 
 # 调用函数删除具有前缀为 "prefix_" 的所有规则
 def delete_rules_with_prefix(prefix):
@@ -39,9 +54,9 @@ def delete_rules_with_prefix(prefix):
                 delete_url = url + "/" + rule["id"]
                 delete_response = requests.delete(delete_url)
                 if delete_response.status_code == 200:
-                    print(f"规则 {rule['id']} 删除成功")
+                    print(f"rule {rule['id']} 删除成功")
                 else:
-                    print(f"规则 {rule['id']} 删除失败")
+                    print(f"rule {rule['id']} 删除失败")
     else:
         print("获取规则列表失败")
 
@@ -52,16 +67,12 @@ def Reg_rule(name):
    url="http://10.214.131.229:9081/rules"
 
    delete_rules_with_prefix(id)
-
-   i = 1
-   for interval in intervals[id]:
-      interval_splited =  interval.split(",")
-      temp_id = f"{id}_{i}"
-      i += 1
+   
+   if "LED" in name:
       rules_profile={
-         "id": temp_id,
-         "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
-            having avg_score >= {interval_splited[0]} AND avg_score <= {interval_splited[1]};",#这里参数需要改
+         "id": id,
+         "sql":f"SELECT id ,score from {name} \
+            where score LIKE '%{intervals[name]}';",#这里参数需要改
          "actions":[
             {
                "mqtt":{
@@ -76,8 +87,33 @@ def Reg_rule(name):
 
       resp=requests.get(url)
       print(resp.content)
+   else :
+      i = 1
+      for interval in intervals[id]:
+         interval_splited =  interval.split(",")
+         temp_id = f"{id}_{i}"
+         i += 1
+         rules_profile={
+            "id": temp_id,
+            "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
+               having avg_score >= {interval_splited[0]} AND avg_score <= {interval_splited[1]};",#这里参数需要改
+            "actions":[
+               {
+                  "mqtt":{
+                     "server":"tcp://10.214.131.229:1883",#这里可以换成变量
+                     "topic":"m",#这个“m”用于报警
+                  }
+               }
+            ]
+         }
+         resp=requests.post(url,json=rules_profile)
+         print(resp.content)
+
+         resp=requests.get(url)
+         print(resp.content)
 
 
+delete_all_streams()# 调用函数删除所有流
 
 delete_rules_with_prefix("")#把所有规则清空一遍
 
