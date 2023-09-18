@@ -29,3 +29,4 @@ print(intervals)
 # ids = unpack(r.get("Monitor_Containers_Id"))
 # for id in ids:
 #     print(id)
+print(unpack(r.hget("Label_mechanical_profile","container-value-cam2-mechanical-1")))

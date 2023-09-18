@@ -24,7 +24,8 @@ def showMasks(masks):
         axes[i].imshow(masks[i], cmap='binary', interpolation='none')
         axes[i].set_axis_off()  # 隐藏坐标轴和刻度
     # 显示图形
-    plt.show()
+#    plt.show()
+    plt.savefig('output.png')
 
 def pack(v):
     return zlib.compress(base64.b64encode(pickle.dumps(v)))
@@ -163,8 +164,8 @@ class MDB:
             center,angle=center_up,angle_up
         else:
             center, angle=center_down, angle_down
-            
-        self.setCenter(center)
+        print(angle,angle_up,angle_down)            
+#        self.setCenter(center)
         return self.__solve(angle)
 
     def __solve(self,angel):
@@ -235,6 +236,7 @@ def send2mqtt(topic, data, add, port):
     client.loop_stop()  # 停止循环后断开连接
     
 
+
 broker_address = "10.214.131.229"
 port = 1883
         
@@ -242,17 +244,17 @@ sam = sam_model_registry["vit_h"](checkpoint="segment-anything/sam_vit_h_4b8939.
 
 client=Redis(IP="10.214.131.229",port=6379)
 predictor = SamPredictor(sam)
-        
-        
+
         
 
 ids=unpack(client.getR().get("Monitor_Containers_Id"))
 mdbDict={}
 while True:
-    try:
+#     try:
         for id in ids:
             Rpipe = client.getPipe()
             if "mechanical" in id:
+                
                 if not (client.getR().hexists("Label_mechanical",id) or client.getR().hexists("Label_mechanical_profile",id)):
                     continue
                 image=client.getR().hget("Camera_Monitor_SubImage",id)
@@ -264,16 +266,20 @@ while True:
                 if id not in mdbDict.keys():
                     mdbDict[id]=MDB(id=id,shape=image_array.shape[:2])
                 predictor.set_image(image_array)
+                print("center",mdbDict[id].center[0],mdbDict[id].center[1])
 
-                masks, _, _ = predictor.predict(point_coords=np.array([[mdbDict[id].center[0],mdbDict[id].center[1]]]),point_labels=np.array([1]))
+
+                masks, _, _ = predictor.predict(point_coords=np.array([[mdbDict[id].center[0],mdbDict[id].center[1]],[62,66]]),point_labels=np.array([1,1]))
+                print(masks,masks.shape)
                 showMasks(masks)
                 value=mdbDict[id].solve(masks[1])
+                print(value)
                 if value==-1:
                         continue
                 scale=unpack(client.getR().hget("monitor_profile",f"{id}-scale"))
                 Rpipe.hset(f"Monitor_{id}", "value",f"{float(scale)*value: .4f}")
                 Rpipe.hset(f"Monitor_{id}", "timestamp", getTimeStampStr())
-                value=Rpipe.hget(f"Monitor_{id}", "value").decode()
+                value=f"{float(scale)*value: .4f}"
                 print(f"Monitor_{id}",value)
                 id = id.replace("-","_")
                 data={
@@ -285,7 +291,7 @@ while True:
                 send2mqtt(id, data, broker_address, port)
                 #print(id, data, broker_address, port)
                 Rpipe.execute()
-    except:
-        pass
-    time.sleep(10) 
+ #    except:
+  #       pass
+#           time.sleep(10) 
                         

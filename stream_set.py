@@ -76,8 +76,8 @@ def Reg_rule(name):
          i += 1
          # status = "'%" + status + "'"
          rules_profile={
-            "id": id,
-            "sql":f"SELECT id ,name from {name} where name LIKE '%{status}';",#这里参数需要改
+            "id": temp_id,
+            "sql":f'SELECT id ,name from {name} where name LIKE "%{status}";',#这里参数需要改
             "actions":[
                {
                   "mqtt":{
