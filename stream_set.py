@@ -96,7 +96,7 @@ def Reg_rule(name):
          rules_profile={
             "id": temp_id,
             "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
-               having avg_score >= {interval_splited[0]} AND avg_score <= {interval_splited[1]};",#这里参数需要改
+               having avg_score BETWEEN {interval_splited[0]} AND {interval_splited[1]};",#这里参数需要改
             "actions":[
                {
                   "mqtt":{

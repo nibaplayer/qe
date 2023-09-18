@@ -15,7 +15,7 @@ for field in fields:
         temp_intervals = temp_intervals.strip("()")
         intervals[temp] = temp_intervals.split(",")
         # print(temp)
-        # r.hset(hash_name,"container-value-cam1-digital-5",pack("(10,30)"))
+        # r.hset(hash_name,temp,pack("(10,30)"))
         print(temp,unpack(r.hget(hash_name,temp)))
 # r.hset(hash_name,"container-value-cam1-digital-5-interval",pack("(10,30)"))
 
