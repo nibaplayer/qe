@@ -20,12 +20,12 @@ def send2mqtt(topic, data, add, port):
 
 add="10.214.131.229"
 port=1883
-topic = "container_value_cam1_digital_5"
+topic = "container_value_cam1-LED-7"
 
 data={
-    "id": "container_value_cam1_digital_5",
-    "name": "mts",
-    "score": float(11),
+    "id": "container_value_cam1-LED-7",
+    "name": "on",
+    "score": float(0),
     "status": True
 }
 send2mqtt(topic,data,add,port)

@@ -69,24 +69,28 @@ def Reg_rule(name):
    delete_rules_with_prefix(id)
    
    if "LED" in name:
-      rules_profile={
-         "id": id,
-         "sql":f"SELECT id ,score from {name} \
-            where score LIKE '%{intervals[name]}';",#这里参数需要改
-         "actions":[
-            {
-               "mqtt":{
-                  "server":"tcp://10.214.131.229:1883",#这里可以换成变量
-                  "topic":"m",#这个“m”用于报警
+      i = 1
+      status_splited = intervals[name][0].split(",")        #注意如果LED需要多个判断条件要用，隔开
+      for status in status_splited:
+         temp_id = f"{id}_{i}"
+         i += 1
+         # status = "'%" + status + "'"
+         rules_profile={
+            "id": id,
+            "sql":f"SELECT id ,name from {name} where name LIKE '%{status}';",#这里参数需要改
+            "actions":[
+               {
+                  "mqtt":{
+                     "server":"tcp://10.214.131.229:1883",#这里可以换成变量
+                     "topic":"m",#这个“m”用于报警
+                  }
                }
-            }
-         ]
-      }
-      resp=requests.post(url,json=rules_profile)
-      print(resp.content)
-
-      resp=requests.get(url)
-      print(resp.content)
+            ]
+         }
+         resp=requests.post(url,json=rules_profile)
+         print(resp.content)
+         resp=requests.get(url)
+         print(resp.content)
    else :
       i = 1
       for interval in intervals[id]:
@@ -95,8 +99,8 @@ def Reg_rule(name):
          i += 1
          rules_profile={
             "id": temp_id,
-            "sql":f"SELECT id ,avg(score) as avg_score from {name} group by TUMBLINGWINDOW(ss, 1) \
-               having avg_score BETWEEN {interval_splited[0]} AND {interval_splited[1]};",#这里参数需要改
+            "sql":f"SELECT id ,score from {name} \
+               where score BETWEEN {interval_splited[0]} AND  {interval_splited[1]};",#这里参数需要改
             "actions":[
                {
                   "mqtt":{
@@ -168,4 +172,4 @@ while True:
             intervals[temp] = new_interval
             Reg_rule(temp)#更新规则
    print("update checked")
-   time.sleep(1) # 每操作一轮休息3秒
+   time.sleep(1) # 每操作一轮休息
