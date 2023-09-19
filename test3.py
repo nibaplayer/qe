@@ -1,4 +1,5 @@
 import requests
+import json
 
 def delete_all_streams():
     url = "http://10.214.131.229:9081/streams"
@@ -17,4 +18,11 @@ def delete_all_streams():
         print("获取流列表失败")
 
 # 调用函数删除所有流
-delete_all_streams()
+# delete_all_streams()
+
+url = "http://10.214.131.229:9081/rules"
+response = requests.get(url)
+print(response.json())
+for temp in response.json():
+    if "id" in temp:
+        print(temp)

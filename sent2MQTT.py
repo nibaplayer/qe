@@ -1,20 +1,32 @@
 import paho.mqtt.client as mqtt
+import json 
 
 #连接回调函数
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
-# 连接到MQTT代理
-client = mqtt.Client()
-client.on_connect = on_connect
-client.connect("127.0.0.1", 1883)
+def send2mqtt(topic, data, add, port):
+#     print("sended")
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.connect(add, port)
+    print(topic,add,port)
 
-# 发布消息到指定主题
-topic = "m"
-payload = "Hello, MQTT!"
-qos_level = 1 #设置QoS等级
-client.publish(topic, payload, qos_level) 
+    client.publish(topic, payload=json.dumps(data))
+#     client.publish(topic, "1")
+    
+    client.loop_start()  # 开始循环，确保消息发送成功
+    client.loop_stop()  # 停止循环后断开连接
 
-# 断开与MQTT代理的连接
-client.disconnect()
+add="10.214.131.229"
+port=1883
+topic = "container_value_cam1_LED_7"
+
+data={
+    "id": "container_value_cam1_LED_7",
+    "name": "on",
+    "score": float(0),
+    "status": True
+}
+send2mqtt(topic,data,add,port)
 
