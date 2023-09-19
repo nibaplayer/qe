@@ -14,7 +14,7 @@ csv_path_head = 'output/'
 width, height,ppt=1,1,0
 points=[]
 Cams=CamImage()
-with open(r'd:\code\qe\db_server\templates\image\none_image.jpg', 'rb') as f:
+with open(r'db_server\templates\image\none_image.jpg', 'rb') as f:
     image_data = f.read()
     None_image = base64.b64encode(image_data).decode('utf-8')
 nameEN=["mechanical","digital","LED"]
