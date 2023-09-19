@@ -5,6 +5,10 @@ import pickle
 import base64
 import zlib
 import redis
+import paho.mqtt.client as mqtt
+import json
+
+
 def pack(v):
     return zlib.compress(base64.b64encode(pickle.dumps(v)))
 
@@ -109,6 +113,29 @@ def get_rgb_brightness_from_base64(base64_str,th=150):
             power = "off"
 
     return power,color
+
+
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+
+def send2mqtt(topic, data, add, port):
+#     print("sended")
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.connect(add, port)
+    print(topic,add,port)
+
+    client.publish(topic, payload=json.dumps(data))
+#     client.publish(topic, "1")
+    
+    client.loop_start()  # 开始循环，确保消息发送成功
+    client.loop_stop()  # 停止循环后断开连接
+    
+
+broker_address = "10.214.131.229"
+port = 1883
+
+
 while(True):
     try:
         ids=unpack(client.getR().get("Monitor_Containers_Id"))
@@ -121,7 +148,16 @@ while(True):
                     p,c=get_rgb_brightness_from_base64(image)
                     Rpipe.hset(f"Monitor_{id}", "value",f"{c}_{p}")
                     Rpipe.hset(f"Monitor_{id}", "timestamp", getTimeStampStr())
-                    print(f"Monitor_{id}")
+                    print(f"Monitor_{id}",c,p)
+                    id = id.replace("-","_")
+                    data={
+                        "id": id,
+                        "name": f"{c}_{p}",
+                        "score": float(0),
+                        "status": True
+                    }
+                    send2mqtt(id, data, broker_address, port)
+                    #print(id, data, broker_address, port)
             Rpipe.execute()
     except:
         pass

@@ -103,6 +103,52 @@ def getCenterLine(img, point, direction="up"):
     slope, _ = np.polyfit(x_values, y_values, 1)
     return points[0], stdAngleAbs(n_points[-1], slope), len(n_points)
 
+def showCenterLine(img,point):
+    def getCenterLinePoints(img, point, direction="up"):
+        if direction == "up":
+            dy = -1
+        else:
+            dy = 1
+        cy, cx = point  # 后面是先后x
+        points = []
+        minx, maxx = cx, cx
+        while True:
+            while img[minx][cy] or img[maxx][cy]:
+                if img[minx][cy]:
+                    minx -= 1
+                if img[maxx][cy]:
+                    maxx += 1
+            points.append(((minx + maxx) / 2, cy))
+            cy += dy
+            cx = int(points[-1][0])
+            if img[cx][cy] or img[cx - 1][cy] or img[cx + 1][cy]:
+                minx, maxx = cx - 1, cx + 1
+            else:
+                break
+        n_points = mvAxis(points, points[0])
+        if len(n_points) == 1:
+            return points, -1, 1
+        # 拟合
+        x_values = np.array([item[0] for item in n_points])
+        y_values = np.array([item[1] for item in n_points])
+        slope, _ = np.polyfit(x_values, y_values, 1)
+        return n_points, stdAngleAbs(n_points[-1], slope), len(n_points)
+    n_points_up,slope_up,l_up=getCenterLinePoints(img,point,direction="up")
+    n_points_down,slope_down,l_down=getCenterLinePoints(img,point,direction="down")
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    x_values_up = np.array([item[0] for item in n_points_up])
+    y_values_up = np.array([item[1] for item in n_points_up])
+    axes[0].plot(x_values_up, y_values_up, marker='o', linestyle='-')
+    axes[0].set_title(f"UP: slope:{slope_up:.4f},Num: {l_up}")
+    x_values_down = np.array([item[0] for item in n_points_down])
+    y_values_down = np.array([item[1] for item in n_points_down])
+    axes[1].plot(x_values_down, y_values_down, marker='o', linestyle='-')
+    axes[1].set_title(f"DOWN: slope:{slope_down:.4f},Num: {l_down}")
+    # 显示图表
+    plt.grid(True)
+    plt.show()
+    plt.savefig('output_poly_fit.png')
+
 class MDB:
     def __init__(self,id="",fpath="",shape=(1,1),MaxValue=1):
         self.fpath=fpath
@@ -119,12 +165,13 @@ class MDB:
             self.profile={"values":{}}
             if not client.getR().hexists("Label_mechanical_profile",id):
                 labels=unpack(client.getR().hget("Label_mechanical",id))
-                
                 for lp in labels["points"]:
                     k=float(lp["tag"])
                     if k<0:
                         if k not in self.profile.keys():
-                            self.profile[k]=(int(lp['x']*w),int(lp['y']*h))
+                            self.profile[k]=[[int(lp['x']*w),int(lp['y']*h)]]
+                        else:
+                            self.profile[k].append([int(lp['x']*w),int(lp['y']*h)])
                     else:
                         if k not in self.profile["values"].keys():
                             self.profile["values"][k]=(int(lp['x']*w),int(lp['y']*h))
@@ -132,10 +179,18 @@ class MDB:
                 
             else:
                 self.profile=unpack(client.getR().hget("Label_mechanical_profile",id))
-            self.setCenter(self.profile.get(-2.0,(0,0)))
+            self.setCenter(self.profile.get(-2.0,[(0,0)]))
 
-    def setCenter(self,center):
-        self.center=center
+    def setCenter(self,centerL):
+        self.centerL=centerL
+        x,y=0,0
+        for p in centerL:
+            x+=p[0]
+            y+=p[1]
+        L=len(centerL)
+        x/=L
+        y/=L
+        self.center=(int(x),int(y))
 
     def getPoly(self):
         vl = list(self.profile["values"].values())
@@ -154,17 +209,37 @@ class MDB:
         coefficients = np.polyfit(x, y, count)
         self.poly = np.poly1d(coefficients)
         self.angleBase=360+angles[0]
-
+        
+        self.drawLabelPoly(x,y,self.poly)
+    
+    def drawLabelPoly(self,x,y,poly):
+        # 生成拟合曲线的x坐标点
+        x_fit = np.linspace(min(x), max(x), 100)
+        y_fit = poly(x_fit)
+        plt.figure(figsize=(8, 6))
+        # 绘制原折线
+        plt.plot(x, y, marker='o', linestyle='-', label='source')
+        # 绘制拟合曲线
+        plt.plot(x_fit, y_fit, color='red', label='new')
+        # 显示图例
+        plt.legend()
+        # 显示图表
+        plt.grid(True)
+        plt.show()
+        plt.savefig('output_label_poly_fit.png')
+    
     def solve(self,img):
         center_up,angle_up,l_up=getCenterLine(img,self.center,direction="up")
         center_down,angle_down,l_down = getCenterLine(img, self.center, direction="down")
+        
+        
         if l_up==1 and l_down==1:
             return "None"
         if l_up>=l_down:
             center,angle=center_up,angle_up
         else:
             center, angle=center_down, angle_down
-        print(angle,angle_up,angle_down)            
+        print("angle",angle,angle_up,angle_down,self.angleBase)            
 #        self.setCenter(center)
         return self.__solve(angle)
 
@@ -266,17 +341,24 @@ while True:
                 if id not in mdbDict.keys():
                     mdbDict[id]=MDB(id=id,shape=image_array.shape[:2])
                 predictor.set_image(image_array)
-                print("center",mdbDict[id].center[0],mdbDict[id].center[1])
-
-
-                masks, _, _ = predictor.predict(point_coords=np.array([[mdbDict[id].center[0],mdbDict[id].center[1]],[62,66]]),point_labels=np.array([1,1]))
-                print(masks,masks.shape)
+                CenterLength=len(mdbDict[id].centerL)
+                point_coords=np.array(mdbDict[id].centerL)
+                point_labels=np.ones(CenterLength)
+                print("prompt",point_coords,point_labels)
+#                 masks, _, _ = predictor.predict(point_coords=np.array([[mdbDict[id].center[0],mdbDict[id].center[1]]]),point_labels=np.array([1]))
+                masks, _, _ = predictor.predict(point_coords=point_coords,point_labels=point_labels)
+               
+        
                 showMasks(masks)
+                showCenterLine(masks[1],mdbDict[id].center)
+            
                 value=mdbDict[id].solve(masks[1])
-                print(value)
                 if value==-1:
                         continue
-                scale=unpack(client.getR().hget("monitor_profile",f"{id}-scale"))
+                if client.getR().hexists("monitor_profile",f"{id}-scale"):
+                    scale=unpack(client.getR().hget("monitor_profile",f"{id}-scale"))
+                else:
+                    scale=100
                 Rpipe.hset(f"Monitor_{id}", "value",f"{float(scale)*value: .4f}")
                 Rpipe.hset(f"Monitor_{id}", "timestamp", getTimeStampStr())
                 value=f"{float(scale)*value: .4f}"
