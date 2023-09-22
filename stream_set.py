@@ -147,16 +147,6 @@ for field in fields:
       Reg_rule(temp)#创建初始的规则  之后要定期查询更新
    
 
-
-
-        # print(temp)
-        #r.hset(hash_name,temp,pack("(10,20)"))
-# for field in fields:
-#     temp = field.decode()
-#     if "interval" in temp:
-#         print(temp)
-#         r.hset(hash_name,temp,pack("(10,20)"))
-
 while True:
    fields = r.hkeys(hash_name)
    for field in fields:
